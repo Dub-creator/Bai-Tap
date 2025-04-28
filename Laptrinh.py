@@ -106,19 +106,6 @@ def dang_nhap(ds):
     return None
 
 # ========================
-# Tạo admin lần đầu
-# ========================
-def tao_admin():
-    ds = tai_nguoi_dung()
-    for u in ds:
-        if u.get_ten_dang_nhap() == 'admin' and u.is_admin():
-            return
-    admin = NguoiDung('admin', 'admin123', is_admin=True)
-    ds.append(admin)
-    luu_nguoi_dung(ds)
-    print("Admin mặc định đã được tạo (admin/admin123)")
-
-# ========================
 # Kiểm tra input
 # ========================
 
@@ -217,6 +204,4 @@ def main():
             print("Lựa chọn không hợp lệ.")
 
 if __name__ == "__main__":
-    if not os.path.exists('users.pkl'):
-        tao_admin()
     main()
