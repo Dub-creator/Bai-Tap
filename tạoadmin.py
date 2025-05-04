@@ -1,56 +1,66 @@
-import pickle
 import os
+import pickle
+import uuid
 
-# Phải định nghĩa class giống hệt bên chương trình chính
-class NguoiDung:
-    def __init__(self, ten_dang_nhap, mat_khau, is_admin=False):
-        self.__ten_dang_nhap = ten_dang_nhap
-        self.__mat_khau = mat_khau
-        self.__is_admin = is_admin  # Thêm flag phân biệt Admin hay User
+# Bạn cần đảm bảo rằng 2 lớp này đã được định nghĩa (hoặc import) trước khi dùng
+# from your_module import InputValidator, Admin
 
-    def get_ten_dang_nhap(self):
-        return self.__ten_dang_nhap
+class InputValidator:
+    @staticmethod
+    def validate_username(username):
+        # 4–20 ký tự, chỉ chữ/số/_
+        return bool(__import__('re').fullmatch(r'^[a-zA-Z0-9_]{4,20}$', username))
 
-    def get_mat_khau(self):
-        return self.__mat_khau
+class Admin:
+    def __init__(self, user_id, username, password):
+        self.user_id = user_id
+        self.username = username
+        self.password = password
+        self.role = 'admin'
 
-    def is_admin(self):
-        return self.__is_admin
+    def login(self, username, password):
+        return self.username == username and self.password == password
 
-def tai_nguoi_dung(filename="users.pkl"):
-    if os.path.exists(filename):
-        with open(filename, "rb") as f:
-            return pickle.load(f)
+    def logout(self):
+        print(f"Admin {self.username} đã đăng xuất.")
+
+
+def create_admin_account(file_path='users.pkl'):
+    # Tải hoặc khởi tạo danh sách users
+    if os.path.exists(file_path):
+        with open(file_path, 'rb') as f:
+            users = pickle.load(f)
     else:
-        return []
+        users = []
 
-def luu_nguoi_dung(danh_sach_nguoi_dung, filename="users.pkl"):
-    with open(filename, "wb") as f:
-        pickle.dump(danh_sach_nguoi_dung, f)
+    print("=== TẠO TÀI KHOẢN ADMIN MỚI ===")
 
-def tao_admin():
-    danh_sach = tai_nguoi_dung()
+    # Nhập tên đăng nhập
+    while True:
+        username = input("Nhập tên đăng nhập (4-20 ký tự, chữ/số/_): ")
+        if not InputValidator.validate_username(username):
+            print("Tên đăng nhập không hợp lệ! (4–20 ký tự, chỉ chữ/số/_)")
+            continue
+        if any(u.username == username for u in users):
+            print("Tên đăng nhập đã tồn tại!")
+            continue
+        break
 
-    # Kiểm tra xem đã có admin chưa
-    for nguoi in danh_sach:
-        if nguoi.get_ten_dang_nhap() == "admin":
-            print("Admin đã tồn tại.")
-            return
+    # Nhập mật khẩu (bạn có thể thêm validate mật khẩu nếu cần)
+    password = input("Nhập mật khẩu: ")
 
-    # Nhập tên đăng nhập và mật khẩu cho admin
-    ten_admin = input("Nhập tên đăng nhập cho admin: ")
-    mat_khau_admin = input("Nhập mật khẩu cho admin: ")
+    # Tạo admin mới
+    user_id = str(uuid.uuid4())
+    new_admin = Admin(user_id, username, password)
+    users.append(new_admin)
 
-    # Kiểm tra tên đăng nhập và mật khẩu (có thể thêm các điều kiện kiểm tra nếu cần)
-    if len(mat_khau_admin) < 6:
-        print("Mật khẩu quá ngắn, phải có ít nhất 6 ký tự.")
-        return
+    # Lưu lại file
+    with open(file_path, 'wb') as f:
+        pickle.dump(users, f)
 
-    # Tạo tài khoản admin mới
-    admin = NguoiDung(ten_admin, mat_khau_admin, is_admin=True)
-    danh_sach.append(admin)
-    luu_nguoi_dung(danh_sach)
-    print(f"Tạo tài khoản admin {ten_admin} thành công!")
+    print(f"Tạo tài khoản admin '{username}' thành công! ID: {user_id}")
+
 
 if __name__ == "__main__":
-    tao_admin()
+    create_admin_account()
+
